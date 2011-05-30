@@ -284,7 +284,7 @@ class LiveList(LiveContainer):
     
 
 class LiveBox(LiveContainer):
-    """A repeating widget that render its values as an <ul> element"""
+    """A repeating widget that render its values as an <div> element"""
     template = 'mako:tw2.livewidgets.templates.livebox'
     maker_template = 'mako:tw2.livewidgets.templates.livebox_maker'
     child = Box
