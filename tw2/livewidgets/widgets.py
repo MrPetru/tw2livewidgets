@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 #
 # This file is part of tw2.livewidgets.
 #
@@ -87,6 +87,15 @@ class LiveCompoundWidget(LiveWidget, twc.CompoundWidget):
             cls.id = None
 
     def prepare(self):
+        
+        # extract a dictionary from value
+        if isinstance(self.value, dict):
+            self.data = self.value
+        elif hasattr(self.value, '__json__'):
+            self.data = self.value.__json__()
+        else:
+            self.data = getattr(self.value, '__dict__', {})
+            
         # extend data with subelements
         newdata = {}
         if self.key in self.data:
@@ -118,6 +127,7 @@ class Box(LiveCompoundWidget):
     maker_template = 'mako:tw2.livewidgets.templates.box_maker'
 
     widget_class = 'lw_box'
+    append_selector = 'div'
 
 class Link(LiveCompoundWidget):
     """A link widget
@@ -236,7 +246,7 @@ class ListItemLayout(ItemLayout):
     template = 'mako:tw2.livewidgets.templates.list_item_layout'
     maker_template = 'mako:tw2.livewidgets.templates.list_item_layout_maker'
     append_selector = 'ul'
-
+    
 
 class RowLayout(ItemLayout):
     """A compound widget that wraps its children in a <tr> element"""
@@ -271,6 +281,14 @@ class LiveList(LiveContainer):
     child = ListItemLayout
 
     container_class = 'lw_livelist'
+    
+
+class LiveBox(LiveContainer):
+    """A repeating widget that render its values as an <ul> element"""
+    template = 'mako:tw2.livewidgets.templates.livebox'
+    maker_template = 'mako:tw2.livewidgets.templates.livebox_maker'
+    child = Box
+    container_class = 'lw_livebox'
 
 
 class LiveTable(LiveContainer):
