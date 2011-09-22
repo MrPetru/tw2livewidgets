@@ -282,7 +282,36 @@ class LiveTable(LiveContainer):
 
     container_class = 'lw_livetable'
 
+class LiveText (twc.Widget):
+    template = 'mako:tw2.livewidgets.templates.livetext'
+    data = twc.Param('child data', default={})
+    
+    #def prepare(self):
+    #    super(LiveText, self).prepare()
+    #    print (self.parent.proj_id)
+    
+        
 
+class LiveBox (twc.RepeatingWidget):
+    """
+        A LiveBox that contain live widgets.
+    """
+    template = 'mako:tw2.livewidgets.templates.livebox'
+    widget_class = 'lw_livebox'
+    
+    def prepare(self):
+        super(LiveBox, self).prepare()                  
+                    
+        for c in self.children:
+            c.data = getattr(c.value, '__dict__', {})
+            for p in self.params:
+                if hasattr(self, p):
+                    c.data[p] = getattr(self, p)
+        
+        
+    
+    
+    
 # DEBUG stuff
 class Dummy(object):
     def __init__(self, **kw):
