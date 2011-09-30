@@ -292,7 +292,8 @@ class LiveText (twc.Widget):
     
         
 
-class LiveBox (twc.RepeatingWidget):
+##class LiveBox (twc.RepeatingWidget):
+class LiveBox (LiveContainer):
     """
         A LiveBox that contain live widgets.
     """
@@ -307,6 +308,10 @@ class LiveBox (twc.RepeatingWidget):
             for p in self.params:
                 if hasattr(self, p):
                     c.data[p] = getattr(self, p)
+                    
+            # extend data with parent's extra_data
+            if hasattr(self, 'extra_data'):
+                c.data.update(self.extra_data)
         
         
     
