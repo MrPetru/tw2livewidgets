@@ -216,8 +216,8 @@ class ItemLayout(twc.CompoundWidget):
             self.data = getattr(self.value, '__dict__', {})
 
         # extend data with parent's extra_data
-        if self.parent and hasattr(self.parent, 'extra_data'):
-            self.data.update(self.parent.extra_data)
+        if hasattr(self, 'extra_data'):
+            self.data.update(self.extra_data)
 
         # prepare data for children
         for c in self.children:
@@ -281,6 +281,15 @@ class LiveTable(LiveContainer):
     child = RowLayout
 
     container_class = 'lw_livetable'
+    
+class LiveBox(LiveContainer):
+    """ LiveBox description"""
+    
+    template = 'mako:tw2.livewidgets.templates.livebox'
+    maker_template = 'mako:tw2.livewidgets.templates.livebox_maker'
+    child = ItemLayout
+#    append_selector = 'div'
+    container_class = 'lw_livebox'
 
 
 # DEBUG stuff
