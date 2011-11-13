@@ -243,6 +243,7 @@ class RowLayout(ItemLayout):
     template = 'mako:tw2.livewidgets.templates.row_layout'
     maker_template = 'mako:tw2.livewidgets.templates.row_layout_maker'
     append_selector = 'table tbody'
+    
 
 
 # Containers
@@ -264,6 +265,15 @@ class LiveContainer(twc.RepeatingWidget):
 #        twc.JSLink(modname=__name__, filename='static/jquery.js'),
     ]
 
+class LiveContainer2(twc.RepeatingWidget):
+    """Base class for LiveWdigets containers"""
+    container_class = twc.Param('CSS class for the container element',
+        default='')
+    extra_data = twc.Param('Additional data that will be appended to each '
+        'items\'s data', default={})
+    children = twc.Required
+    maker = twc.util.class_or_instance(_maker)
+    
 
 class LiveList(LiveContainer):
     """A repeating widget that render its values as an <ul> element"""
@@ -281,6 +291,23 @@ class LiveTable(LiveContainer):
     child = RowLayout
 
     container_class = 'lw_livetable'
+
+class StatusBox(ItemLayout): ## this is a compound widget for LiveBox
+    """ used inside LiveBox """
+    template = 'mako:tw2.livewidgets.templates.statusbox'
+    maker_template = 'mako:tw2.livewidgets.templates.statusbox_maker'
+    append_selector = '.lw_livebox' ## or '.statusbox'
+    
+class LiveBox(LiveContainer):
+    """ when used in summary page as a container """
+    ## is a container like LiveTable and LiveList
+    ## that handling update of his children but nom him self
+    ## this widget don't have a maker_template 
+    template = 'mako:tw2.livewidgets.templates.livebox' 
+    child = StatusBox # must be a  compound widget like RowLayout
+    container_class = 'lw_livebox'
+    
+
 
 
 # DEBUG stuff
