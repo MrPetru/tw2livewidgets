@@ -214,6 +214,7 @@ class ItemLayout(twc.CompoundWidget):
             self.data = self.value.__json__()
         else:
             self.data = getattr(self.value, '__dict__', {})
+            
 
         # extend data with parent's extra_data
         if self.parent and hasattr(self.parent, 'extra_data'):
@@ -265,13 +266,25 @@ class LiveContainer(twc.RepeatingWidget):
 #        twc.JSLink(modname=__name__, filename='static/jquery.js'),
     ]
 
-class LiveContainer2(twc.RepeatingWidget):
+class LiveRepeating(twc.RepeatingWidget):
     """Base class for LiveWdigets containers"""
     container_class = twc.Param('CSS class for the container element',
         default='')
     extra_data = twc.Param('Additional data that will be appended to each '
         'items\'s data', default={})
-    children = twc.Required
+    ##children = twc.Required
+    
+    def prepare(self):
+        self.data = dict()
+
+        # extend data with parent's extra_data
+        if self.parent and hasattr(self.parent, 'extra_data'):
+            self.data.update(self.parent.extra_data)
+
+        # prepare data for children
+        self.child.data = self.data
+        super(LiveRepeating, self).prepare()
+    
     maker = twc.util.class_or_instance(_maker)
     
 
@@ -296,7 +309,8 @@ class StatusBox(ItemLayout): ## this is a compound widget for LiveBox
     """ used inside LiveBox """
     template = 'mako:tw2.livewidgets.templates.statusbox'
     maker_template = 'mako:tw2.livewidgets.templates.statusbox_maker'
-    append_selector = '.lw_livebox' ## or '.statusbox'
+    append_selector = 'lw_statusbox' ## or '.statusbox'
+    update_condition = 'false'
     
 class LiveBox(LiveContainer):
     """ when used in summary page as a container """
@@ -307,6 +321,16 @@ class LiveBox(LiveContainer):
     child = StatusBox # must be a  compound widget like RowLayout
     container_class = 'lw_livebox'
     
+class StatusIconBox(LiveRepeating):
+    """Custom livewidget to show a box of status icons."""
+    params = ['icon_class', 'dest']
+    template = 'mako:tw2.livewidgets.templates.statusiconbox'
+    maker_template = 'mako:tw2.livewidgets.templates.statusiconbox_maker'
+    update_condition = 'true'
+    child = StatusBox
+    css_class = 'statusiconbox'
+    show_header = False
+    sortable = False
 
 
 
