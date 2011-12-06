@@ -54,6 +54,9 @@ class LiveWidget(twc.Widget):
         ' with prototype: ``function(data){}`` that returns the HTML for this '
         'field', default='mako:tw2.livewidgets.templates.default_maker')
     label = twc.Param('Widget label', default='')
+    display_w = twc.Param('display or not widget', default=1)
+    display_w2 = twc.Param('display or not widget', default=1)
+    type_w = twc.Param('display or not widget', default=1)
     help_text = twc.Param('Tooltip text', default='')
     update_condition = twc.Param('Javascript condition used to filter updates',
         default='true')
@@ -64,7 +67,189 @@ class LiveWidget(twc.Widget):
         'templates', default = {})
 
     maker = twc.util.class_or_instance(_maker)
+    
+##    def prepare(self):
+##        super(LiveWidget, self).prepare()
+##        if hasattr(self, 'parent') and hasattr(self.parent, 'display_w'):
+##            if hasattr(self, 'type_w'):
+##                self.display_w = self.parent.display_w
+##                #self.type_w = self.parent.type_w
+##                self.display_w2 = (self.display_w or self.type_w)
+##        
 
+## help classes
+class widget_actions():
+    display_flags = [
+        1, # 0,  history - vedi tutta la histori
+        1, # 1,  addnote - agiunge una nota
+        1, # 2,  download - download last version 
+        1, # 3,  checkout - prendi in carrico
+        0, # 4,  release - lasciare l'incarico
+        0, # 5,  publish - publicare una nuova versione
+        0, # 6,  submit - manda per essere revisionato
+        0, # 7,  recall - richiama dalla revisione
+        0, # 8,  approve - approvare il asset
+        0, # 9,  sendback - rimandare in dietro per fare le modifiche
+        0, # 10, delete - cancelare l'asset
+        0, # 11, revoke - anulare l'approvazione
+        ]
+    
+    user_type_flags = [
+        0, # 0, admin
+        0, # 1, supervisor
+        0, # 2, artist
+        0, # 3, owner
+        ]
+        
+    asset_status_flags = [
+        0, # 0, checked_in
+        0, # 1, submited true=submited, false=(not-submited or sent back_to)
+        ]
+        
+    def set_user_type_flags(self, asset, user):
+        #reset user_type_flags
+        self.user_type_flags = [0,0,0,0]
+
+        # set flags in user_type_flags based on proprietes of user
+        for admin in asset.admins:
+            if admin.id == user:
+                self.user_type_flags[0] = 1
+        for supervisor in asset.supervisors:
+            if supervisor.id == user:
+                self.user_type_flags[1] = 1
+        for artist in asset.artists:
+            if artist.id == user:
+                self.user_type_flags[2] = 1
+        if asset.owner_id == user:
+            self.user_type_flags[3] = 1
+        print (asset.owner_id, 'asset owner')
+        # for debug        
+        #print(self.user_type_flags, '[admin, supervisor, user] for user:', user)
+        
+    def set_asset_status_flags(self, asset):
+#        # reset asset_status_flags 
+#        self.asset_status_flags = [0,0]
+
+        if asset.checkedout:
+            self.display_flags[3] = 0
+        else: self.display_flags[4] = 0
+        
+        if asset.approved:
+            self.display_flags[7] = 0
+            self.display_flags[5] = 0
+            self.display_flags[4] = 0
+            self.display_flags[8] = 0
+            self.display_flags[9] = 0
+        else:
+            self.display_flags[11] = 0
+        
+        if asset.submitted:
+            self.display_flags[6] = 0
+        else:
+            self.display_flags[7] = 0
+            self.display_flags[9] = 0
+            self.display_flags[8] = 0
+        
+        # for debug
+        #print (self.asset_status_flags, '[checked_in, submited] for asset:', asset.id    )
+    
+    def list_union(self,list_A, list_B): # A union B
+        union = []
+        if len(list_A)==0:
+            if len(list_B)==0:
+                return (union)
+            else:
+                return (list_B)
+        elif len(list_B)==0:
+            return (list_A)
+        else:
+            for index in range(len(list_A)):
+                union.append(list_A[index] or list_B[index])
+            return (union)
+            
+    def set_display_flags_by_user(self):
+        # set display_flags based on user type
+        admin_display_status=supervisor_display_status=[1,1,1,0,0,0,0,0,0,0,0,0]
+        artist_display_status = owner_display_status = [1,1,1,0,0,0,0,0,0,0,0,0]
+        if self.user_type_flags[0]:
+            # set display for admin
+            admin_display_status = [
+                1, # 0,  history
+                1, # 1,  addnote
+                1, # 2,  download
+                0, # 3,  checkout
+                0, # 4,  release
+                0, # 5,  publish
+                0, # 6,  submit
+                0, # 7,  recall
+                0, # 8,  approuve
+                0, # 9,  sendback
+                1, # 10, delete
+                0, # 11, revoke
+                ]
+        if self.user_type_flags[1]:
+            # set display for supervisor
+            supervisor_display_status = [
+                1, # 0,  history
+                1, # 1,  addnote
+                1, # 2,  download
+                0, # 3,  checkout
+                0, # 4,  release
+                0, # 5,  publish
+                0, # 6,  submit
+                0, # 7,  recall
+                1, # 8,  approve
+                1, # 9,  sendback
+                0, # 10, delete
+                1, # 11, revoke
+                ]
+            
+        if self.user_type_flags[2]:
+            # set display for user
+            artist_display_status = [
+                1, # 0,  history
+                1, # 1,  addnote
+                1, # 2,  download
+                1, # 3,  checkout
+                0, # 4,  release
+                0, # 5,  publish
+                0, # 6,  submit
+                0, # 7,  recall
+                0, # 8,  approve
+                0, # 9,  sendback
+                0, # 10, delete
+                0, # 11, revoke
+                ]
+        if self.user_type_flags[3]:
+            # set display for user
+            owner_display_status = [
+                1, # 0,  history
+                1, # 1,  addnote
+                1, # 2,  download
+                0, # 3,  checkout
+                1, # 4,  release
+                1, # 5,  publish
+                1, # 6,  submit
+                1, # 7,  recall
+                0, # 8,  approve
+                0, # 9,  sendback
+                0, # 10, delete
+                0, # 11, revoke
+                ]
+        #print (self.list_union(admin_display_status, self.list_union(supervisor_display_status,artist_display_status)))
+        self.display_flags = self.list_union(
+            admin_display_status, self.list_union(
+                supervisor_display_status,self.list_union(artist_display_status, owner_display_status)))
+        
+    def main(self, asset, cur_user):
+        self.set_user_type_flags(asset, cur_user)
+        self.set_display_flags_by_user()
+        self.set_asset_status_flags(asset)
+        
+        print (asset.category_id)
+        print (asset.owner_id)
+        #print (self.display_flags)
+        return (self.display_flags)
 
 class LiveCompoundWidget(LiveWidget, twc.CompoundWidget):
     """Base class for compound LiveWidgets
@@ -97,6 +282,11 @@ class LiveCompoundWidget(LiveWidget, twc.CompoundWidget):
                 for k, v in self.data[self.key].__dict__.iteritems():
                     newdata['%s_%s' % (self.key, k)] = v
         self.data.update(newdata)
+        if hasattr(self, 'parent') and hasattr(self.parent, 'display_w'):
+            if hasattr(self, 'type_w'):
+                self.display_w = self.parent.display_w
+                #self.type_w = self.parent.type_w
+                self.display_w2 = (self.display_w or self.type_w)
 
         # prepare data for children
         for c in self.children:
@@ -118,6 +308,25 @@ class Box(LiveCompoundWidget):
     maker_template = 'mako:tw2.livewidgets.templates.box_maker'
 
     widget_class = 'lw_box'
+        
+class BoxAction(LiveCompoundWidget):
+    """A simple container widget
+
+    Box is a compound widget, and can contain other widgets like ``Text``,
+    ``Image`` or ``Icon``
+    """
+    display_data = twc.Param('A formatting string the will be expanded with the '
+        'widget\'s ItemLayout value as a dictionary and used as "href" '
+        'attribute', default=[])
+    template = 'mako:tw2.livewidgets.templates.box'
+    maker_template = 'mako:tw2.livewidgets.templates.box_maker'
+
+    widget_class = 'lw_box'
+    def prepare(self):
+        wa = widget_actions()
+        self.display_data=wa.main(self.value, self.parent.parent.user.id)
+        super(BoxAction, self).prepare()
+        
 
 class Link(LiveCompoundWidget):
     """A link widget
@@ -132,6 +341,34 @@ class Link(LiveCompoundWidget):
         'attribute', default='')
 
     widget_class = 'lw_link'
+
+class ActionButton(LiveCompoundWidget):
+    """An button widget
+
+    Button is a compound widget, and can contain other widgets like ``Text``,
+    ``Image`` or ``Icon``
+    """
+    template = 'mako:tw2.livewidgets.templates.actionbutton'
+    maker_template = 'mako:tw2.livewidgets.templates.actionbutton_maker'
+    action = twc.Param('A formatting string the will be expanded with the '
+        'widget\'s ItemLayout value as a dictionary and used as "href" '
+        'attribute', default='')
+    index = twc.Param('A formatting string the will be expanded with the '
+        'widget\'s ItemLayout value as a dictionary and used as "href" '
+        'attribute', default=None)
+    display_cond = twc.Param('A formatting string the will be expanded with the '
+        'widget\'s ItemLayout value as a dictionary and used as "href" '
+        'attribute', default=0)
+    dialog = twc.Param('Whether the button target should open in a dialog '
+        '(the button will have a "dialog" css class, creating the dialog is '
+        'left to the application)', default=False)
+
+    widget_class = 'lw_actionbutton'
+    
+    def prepare(self):
+        print(self.parent.parent.parent.extra_data)
+        self.display_cond = self.parent.display_data[int(self.index)]
+        super(ActionButton, self).prepare()
 
 class Button(LiveCompoundWidget):
     """An button widget
@@ -180,9 +417,14 @@ class Image(LiveWidget):
 
     def prepare(self):
         super(Image, self).prepare()
-
-        # use widget value if "src" was not given
-        self.src = self.src or self.value or ''
+        if self.id == 'thumbnail':
+            if self.value == '' or self.value == None:
+                self.parent.css_class = 'thumbnail_image_not_found'
+                self.src = ''
+                self.help_text = ''
+        else:
+            # use widget value if "src" was not given
+            self.src = self.src or self.value or ''
 
 
 class Icon(LiveWidget):
@@ -195,7 +437,7 @@ class Icon(LiveWidget):
 
 
 # Layouts
-class ItemLayout(twc.CompoundWidget):
+class ItemLayout(twc.CompoundWidget, LiveWidget):
     """Base class for LiveWidget layouts"""
     maker_template = twc.Param('A mako template rendering a javascript function'
         ' with prototype: ``function(data){}`` that returns the HTML for this '
@@ -248,7 +490,7 @@ class RowLayout(ItemLayout):
 
 
 # Containers
-class LiveContainer(twc.RepeatingWidget):
+class LiveContainer(twc.RepeatingWidget, LiveWidget):
     """Base class for LiveWdigets containers"""
     container_class = twc.Param('CSS class for the container element',
         default='')
@@ -266,7 +508,7 @@ class LiveContainer(twc.RepeatingWidget):
 #        twc.JSLink(modname=__name__, filename='static/jquery.js'),
     ]
 
-class LiveRepeating(twc.RepeatingWidget):
+class LiveRepeating(twc.RepeatingWidget, LiveWidget):
     """Base class for LiveWdigets containers"""
     container_class = twc.Param('CSS class for the container element',
         default='')
@@ -275,7 +517,7 @@ class LiveRepeating(twc.RepeatingWidget):
     ##children = twc.Required
     
     def prepare(self):
-        self.data = dict()
+        #self.data = dict()
 
         # extend data with parent's extra_data
         if self.parent and hasattr(self.parent, 'extra_data'):
@@ -309,7 +551,7 @@ class StatusBox(ItemLayout): ## this is a compound widget for LiveBox
     """ used inside LiveBox """
     template = 'mako:tw2.livewidgets.templates.statusbox'
     maker_template = 'mako:tw2.livewidgets.templates.statusbox_maker'
-    append_selector = 'lw_statusbox' ## or '.statusbox'
+    append_selector = 'lw_statusbox'
     update_condition = 'false'
     
 class LiveBox(LiveContainer):
@@ -323,7 +565,7 @@ class LiveBox(LiveContainer):
     
 class StatusIconBox(LiveRepeating):
     """Custom livewidget to show a box of status icons."""
-    params = ['icon_class', 'dest']
+    params = []
     template = 'mako:tw2.livewidgets.templates.statusiconbox'
     maker_template = 'mako:tw2.livewidgets.templates.statusiconbox_maker'
     update_condition = 'true'
@@ -331,6 +573,31 @@ class StatusIconBox(LiveRepeating):
     css_class = 'statusiconbox'
     show_header = False
     sortable = False
+
+class LiveThumbnail(LiveCompoundWidget):
+    """A simple container widget
+
+    Box is a compound widget, and can contain other widgets like ``Text``,
+    ``Image`` or ``Icon``
+    """
+    template = 'mako:tw2.livewidgets.templates.livethumbnail'
+    maker_template = 'mako:tw2.livewidgets.templates.livethumbnail_maker'
+    
+    src = twc.Param('A formatting string the will be expanded with the '
+        'widget\'s ItemLayout value as a dictionary, ``None`` defaults to the '
+        'widget\'s value', default='')
+
+    widget_class = 'lw_thumbnail'
+    css_class = 'thumbnail'
+    children = [
+        Image(
+            id='thumbnail',
+            help_text='thumbnail',
+            css_class='thumbnail',
+            condition='data.has_preview',
+            src='/repo/%(thumbnail)s',
+            )
+    ]
 
 
 
