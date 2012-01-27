@@ -92,6 +92,7 @@ class widget_actions():
         0, # 9,  sendback - rimandare in dietro per fare le modifiche
         0, # 10, delete - cancelare l'asset
         0, # 11, revoke - anulare l'approvazione
+        0, # 12, open - apri il asset tramite il servizio locale di spam
         ]
     
     user_type_flags = [
@@ -132,7 +133,9 @@ class widget_actions():
 
         if asset.checkedout:
             self.display_flags[3] = 0
-        else: self.display_flags[4] = 0
+        else:
+            self.display_flags[4] = 0
+            self.display_flags[12] = 0
         
         if asset.approved:
             self.display_flags[7] = 0
@@ -140,11 +143,13 @@ class widget_actions():
             self.display_flags[4] = 0
             self.display_flags[8] = 0
             self.display_flags[9] = 0
+            self.display_flags[12] = 0
         else:
             self.display_flags[11] = 0
         
         if asset.submitted:
             self.display_flags[6] = 0
+            self.display_flags[12] = 0
         else:
             self.display_flags[7] = 0
             self.display_flags[9] = 0
@@ -169,8 +174,8 @@ class widget_actions():
             
     def set_display_flags_by_user(self):
         # set display_flags based on user type
-        admin_display_status=supervisor_display_status=[1,1,1,0,0,0,0,0,0,0,0,0]
-        artist_display_status = owner_display_status = [1,1,1,0,0,0,0,0,0,0,0,0]
+        admin_display_status=supervisor_display_status=[1,1,1,0,0,0,0,0,0,0,0,0,1]
+        artist_display_status = owner_display_status = [1,1,1,0,0,0,0,0,0,0,0,0,1]
         if self.user_type_flags[0]:
             # set display for admin
             admin_display_status = [
@@ -186,6 +191,7 @@ class widget_actions():
                 0, # 9,  sendback
                 1, # 10, delete
                 0, # 11, revoke
+                1, # 12, open
                 ]
         if self.user_type_flags[1]:
             # set display for supervisor
@@ -202,6 +208,7 @@ class widget_actions():
                 1, # 9,  sendback
                 0, # 10, delete
                 1, # 11, revoke
+                1, # 12, open
                 ]
             
         if self.user_type_flags[2]:
@@ -219,6 +226,7 @@ class widget_actions():
                 0, # 9,  sendback
                 0, # 10, delete
                 0, # 11, revoke
+                0, # 12, open
                 ]
         if self.user_type_flags[3]:
             # set display for user
@@ -235,6 +243,7 @@ class widget_actions():
                 0, # 9,  sendback
                 0, # 10, delete
                 0, # 11, revoke
+                1, # 12, open
                 ]
         #print (self.list_union(admin_display_status, self.list_union(supervisor_display_status,artist_display_status)))
         self.display_flags = self.list_union(
