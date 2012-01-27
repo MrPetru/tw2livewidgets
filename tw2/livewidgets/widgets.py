@@ -92,7 +92,7 @@ class widget_actions():
         0, # 9,  sendback - rimandare in dietro per fare le modifiche
         0, # 10, delete - cancelare l'asset
         0, # 11, revoke - anulare l'approvazione
-        0, # 12, open - apri il asset tramite il servizio locale di spam
+        1, # 12, open - apri il asset tramite il servizio locale di spam
         ]
     
     user_type_flags = [
