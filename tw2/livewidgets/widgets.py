@@ -183,7 +183,7 @@ class widget_actions():
                 1, # 1,  addnote
                 1, # 2,  download
                 0, # 3,  checkout
-                0, # 4,  release
+                1, # 4,  release
                 0, # 5,  publish
                 0, # 6,  submit
                 0, # 7,  recall
@@ -200,7 +200,7 @@ class widget_actions():
                 1, # 1,  addnote
                 1, # 2,  download
                 0, # 3,  checkout
-                0, # 4,  release
+                1, # 4,  release
                 0, # 5,  publish
                 0, # 6,  submit
                 0, # 7,  recall
