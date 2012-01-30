@@ -160,6 +160,10 @@ class widget_actions():
             self.display_flags[4] = 0
             self.display_flags[7] = 0
             self.display_flags[5] = 0
+            self.display_flags[3] = 0
+            
+        if asset.approved and not self.user_type_flags[1]:
+            self.display_flags[4] = 0
             
         if not asset.approved and not asset.submitted:
             self.display_flags[9] = 0
