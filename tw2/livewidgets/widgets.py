@@ -123,41 +123,51 @@ class widget_actions():
                 self.user_type_flags[2] = 1
         if asset.owner_id == user:
             self.user_type_flags[3] = 1
-        print (asset.owner_id, 'asset owner')
+        #print (asset.owner_id, 'asset owner')
         # for debug        
         #print(self.user_type_flags, '[admin, supervisor, user] for user:', user)
         
     def set_asset_status_flags(self, asset):
-#        # reset asset_status_flags 
-#        self.asset_status_flags = [0,0]
+    #    # reset asset_status_flags 
+    #    self.asset_status_flags = [0,0]
 
         if asset.checkedout:
             self.display_flags[3] = 0
-        else:
-            self.display_flags[4] = 0
-            self.display_flags[12] = 0
         
+        if asset.checkedout and (not self.user_type_flags[1]) and (not self.user_type_flags[3]):
+            self.display_flags[4] = 0
+        
+        if not asset.checkedout and self.user_type_flags[1]:
+            self.display_flags[4] = 0
+        
+        if asset.submitted and self.user_type_flags[3]:
+            self.display_flags[6] = 0
+            self.display_flags[5] = 0
+        
+        if asset.submitted and not self.user_type_flags[1]:
+            self.display_flags[12] = 0
+            
+        if not asset.submitted and self.user_type_flags[3]:
+            self.display_flags[7] = 0
+            
+        if not asset.submitted:# and user_type_flags[1]:
+            self.display_flags[9] = 0
+            self.display_flags[8] = 0
+            
         if asset.approved:
+            self.display_flags[8] = 0
+            self.display_flags[9] = 0
+            self.display_flags[4] = 0
             self.display_flags[7] = 0
             self.display_flags[5] = 0
-            self.display_flags[4] = 0
-            self.display_flags[8] = 0
+            
+        if not asset.approved and not asset.submitted:
             self.display_flags[9] = 0
-            self.display_flags[12] = 0
-        else:
+            
+        if not asset.approved:
             self.display_flags[11] = 0
-        
-        if asset.submitted:
-            self.display_flags[6] = 0
-            self.display_flags[12] = 0
-        else:
-            self.display_flags[7] = 0
-            self.display_flags[9] = 0
-            self.display_flags[8] = 0
-        
-        # for debug
-        #print (self.asset_status_flags, '[checked_in, submited] for asset:', asset.id    )
-    
+            
+
     def list_union(self,list_A, list_B): # A union B
         union = []
         if len(list_A)==0:
@@ -174,8 +184,8 @@ class widget_actions():
             
     def set_display_flags_by_user(self):
         # set display_flags based on user type
-        admin_display_status=supervisor_display_status=[1,1,1,0,0,0,0,0,0,0,0,0,1]
-        artist_display_status = owner_display_status = [1,1,1,0,0,0,0,0,0,0,0,0,1]
+        admin_display_status=supervisor_display_status=[0,0,0,0,0,0,0,0,0,0,0,0,0]
+        artist_display_status = owner_display_status = [0,0,0,0,0,0,0,0,0,0,0,0,0]
         if self.user_type_flags[0]:
             # set display for admin
             admin_display_status = [
@@ -183,7 +193,7 @@ class widget_actions():
                 1, # 1,  addnote
                 1, # 2,  download
                 0, # 3,  checkout
-                1, # 4,  release
+                0, # 4,  release
                 0, # 5,  publish
                 0, # 6,  submit
                 0, # 7,  recall
@@ -191,7 +201,7 @@ class widget_actions():
                 0, # 9,  sendback
                 1, # 10, delete
                 0, # 11, revoke
-                1, # 12, open
+                0, # 12, open
                 ]
         if self.user_type_flags[1]:
             # set display for supervisor
@@ -255,8 +265,8 @@ class widget_actions():
         self.set_display_flags_by_user()
         self.set_asset_status_flags(asset)
         
-        print (asset.category_id)
-        print (asset.owner_id)
+        #print (asset.category_id)
+        #print (asset.owner_id)
         #print (self.display_flags)
         return (self.display_flags)
 
@@ -375,7 +385,7 @@ class ActionButton(LiveCompoundWidget):
     widget_class = 'lw_actionbutton'
     
     def prepare(self):
-        print(self.parent.parent.parent.extra_data)
+        #print(self.parent.parent.parent.extra_data)
         self.display_cond = self.parent.display_data[int(self.index)]
         super(ActionButton, self).prepare()
 
